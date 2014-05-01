@@ -30,7 +30,7 @@ public class Main {
 		
 		//Llamo a tshark
 		File output = new File(path_out);
-		String[] cmd = {"tshark", "-r", path_in,"-o", "column.format:""Source","%s","Destination","%d","Protocol","%p""","-Ttext"};
+		String[] cmd = {"tshark", "-r", path_in,"-o", "column.format:\"\"Source\",\"%s\",\"Destination\",\"%d\",\"Protocol\",\"%p\"\"","-Ttext"};
 		Process p = new ProcessBuilder(cmd).redirectError(Redirect.INHERIT).redirectOutput(Redirect.to(output)).start();
 		p.waitFor();
 		
