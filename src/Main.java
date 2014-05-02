@@ -30,11 +30,15 @@ public class Main {
 		*/
 		//Llamo a tshark
 		File output = new File(path_out);
-		String[] cmd = {"tshark", "-r", path_in,"-o", "column.format:\"\"Source\",\"%s\",\"Destination\",\"%d\",\"Protocol\",\"%p\"\"","-Ttext"};
+		String[] cmd = {"tshark", "-r", path_in,"-o", "column.format:\"Source\",\"%s\",\"Destination\",\"%d\",\"Protocol\",\"%p\"","-Ttext"};
+
+		for(String s:cmd)
+			System.out.println(s);
+
 		Process p = new ProcessBuilder(cmd).redirectError(Redirect.INHERIT).redirectOutput(Redirect.to(output)).start();
 		p.waitFor();
 		
-		BufferedReader reader = new BufferedReader(new FileReader("out.txt"));
+		BufferedReader reader = new BufferedReader(new FileReader(path_out));
 		String line = null;
 		
 		List<String> macAddress=new ArrayList<String>();
@@ -86,12 +90,12 @@ public class Main {
 
 		reader.close();
 		
-		PrintWriter writer = new PrintWriter(args[1], "UTF-8");
+		PrintWriter writer = new PrintWriter(path_out, "UTF-8");
 		for(int i=0;i<macAddress.size();i++)
 		{
-
-			writer.write(macAddress.get(i)+"\n");
-
+			if(i > 0)
+				writer.write("\n");
+			writer.write(macAddress.get(i));				
 		}
 
 		writer.close();

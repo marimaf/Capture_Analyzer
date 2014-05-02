@@ -21,20 +21,24 @@ public class Main {
 		// TODO Auto-generated method stub
 
 		//El primer parámetro debe ser la ruta al archivo .cap
-		/*
 		String path_in = args[0];
 		String path_out = args[1];
-		*/
+		
+		/*
 		String path_in = "./android.cap";
 		String path_out = "./out.txt";
-		
+		*/
 		//Llamo a tshark
 		File output = new File(path_out);
-		String[] cmd = {"tshark", "-r", path_in,"-o", "column.format:\"\"Source\",\"%s\",\"Destination\",\"%d\",\"Protocol\",\"%p\"\"","-Ttext"};
+		String[] cmd = {"tshark", "-r", path_in,"-o", "column.format:\"Source\",\"%s\",\"Destination\",\"%d\",\"Protocol\",\"%p\"","-Ttext"};
+
+		for(String s:cmd)
+			System.out.println(s);
+
 		Process p = new ProcessBuilder(cmd).redirectError(Redirect.INHERIT).redirectOutput(Redirect.to(output)).start();
 		p.waitFor();
 		
-		BufferedReader reader = new BufferedReader(new FileReader("out.txt"));
+		BufferedReader reader = new BufferedReader(new FileReader(path_out));
 		String line = null;
 		
 		List<String> macAddress=new ArrayList<String>();
@@ -86,7 +90,7 @@ public class Main {
 
 		reader.close();
 		
-		PrintWriter writer = new PrintWriter(args[1], "UTF-8");
+		PrintWriter writer = new PrintWriter(path_out, "UTF-8");
 		for(int i=0;i<macAddress.size();i++)
 		{
 
