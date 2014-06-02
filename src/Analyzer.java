@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 
 /***
  * Esta clase es la encargada de decodificar archivos en formato cap
@@ -31,11 +32,16 @@ public class Analyzer {
 	 * Las siguientes líneas son las macs encontradas (sin filtrar)
 	 * @param path_in: ruta formato cap
 	 * @param path_out: ruta archivo donde dejo los resultados
+	 * @param path_last_capture: ruta a archivo con datos de la última captura
+	 * @param server_time: tiempo actual del servidor
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public void run(String path_in, String path_out) throws IOException, InterruptedException
+	public void run(String path_in, String path_out, String path_last_capture, String server_time) throws IOException, InterruptedException
 	{
+		//Leo resultados captura anterior
+		ReadLastCaptureFile(path_last_capture);
+		
 		//Decodifico con tshark
 		call_tshark(path_in, path_out);
 		
@@ -89,10 +95,70 @@ public class Analyzer {
 		reader.close();
 		
 		//Guardo resultados (primera línea: sin filtro;weak;strong
-		String summary =  macs.get(filter.noFilter).size() + ";" + macs.get(filter.weakFilter).size() + ";" + macs.get(filter.strongFilter).size();  
-		save(path_out, summary, macs.get(filter.noFilter));
+		String summary =  macs.get(filter.noFilter).size() + ";" + macs.get(filter.weakFilter).size() + ";" + macs.get(filter.strongFilter).size();
+		
+		//Agrego los datos de la nueva captura
+		AddNewCaptures(macs, server_time);
+		
+		//Guardo los resultados
+		save(path_out, summary);
 	}
 
+	/**
+	 * Agrego las nuevas capturas a la tabla de hash captures
+	 * @param macs: macs detectadas en la captura actual bajo los 3 filtros
+	 * @param serverTime: tiempo del servidor
+	 */
+	private void AddNewCaptures(Hashtable<filter, HashSet<String>> macs, String serverTime)
+	{
+		//Recorro el total de macs
+		for(String mac:macs.get(filter.noFilter))
+		{
+			//Si ya había detectado esta mac, actualizo su tiempo
+			if(captures.containsKey(mac))
+			{
+				captures.get(mac).set_t_last_detection(serverTime);
+				captures.get(mac).updateStrongFilter(macs.get(filter.strongFilter).contains(mac));
+			}
+			else //primera detección de esta mac
+			{
+				boolean isChekedByWeakFiler = macs.get(filter.weakFilter).contains(mac);
+				boolean isChekedByStrongFiler = macs.get(filter.strongFilter).contains(mac);
+				
+				Capture c = new Capture(mac, serverTime, serverTime, isChekedByWeakFiler, isChekedByStrongFiler);
+				captures.put(mac, c);
+			}
+		}
+		
+	}
+	
+	//Tabla de hash con el total de capturas detectadas
+	private Hashtable<String, Capture> captures;
+	
+	/**
+	 * lee el archivo con los resultados de la captura anterior
+	 * @param path: Ruta al archivo
+	 * @throws IOException 
+	 */
+	private void ReadLastCaptureFile(String path) throws IOException
+	{
+		captures = new Hashtable<String, Capture>();
+		if(!Folder_aux.exists_directory(path))
+			return;
+		List<String> lines = Folder_aux.read_file(path);
+		//quito la primera línea que tiene el resumen de macs encontradas
+		lines.remove(0);
+		for(String s:lines)
+		{
+			if(!s.isEmpty())
+			{
+				Capture c = new Capture(s);
+				captures.put(c.get_mac(), c);
+			}
+		}
+	}
+	
+	
 	/***
 	 * Realiza llamada a tshark para decodificar el archivo cap.
 	 * @param path_in: Ruta hasta archivo en formato cap 
@@ -117,13 +183,13 @@ public class Analyzer {
 	 * @throws FileNotFoundException
 	 * @throws UnsupportedEncodingException
 	 */
-	private void save(String path, String first_line, HashSet<String> macs) throws FileNotFoundException, UnsupportedEncodingException
+	private void save(String path, String first_line) throws FileNotFoundException, UnsupportedEncodingException
 	{
 		PrintWriter writer = new PrintWriter(path, "UTF-8");
 
 		writer.write(first_line);
-		for(String m:macs)
-			writer.write("\n" + m);
+		for(Capture c:captures.values())
+			writer.write("\n" + c);
 
 		writer.close();
 	}

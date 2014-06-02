@@ -1,6 +1,4 @@
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -16,6 +14,8 @@ public class Main {
 	 * @param args
 	 * arg[0] ruta a archivo .cap
 	 * arg[1] ruta archivo donde dejo resultados
+	 * arg[2] ruta archivo última captura
+	 * arg[3] datetime actual del servidor
 	 * @throws IOException 
 	 * @throws InterruptedException 
 	 */
@@ -25,6 +25,8 @@ public class Main {
 		//El primer parámetro debe ser la ruta al archivo .cap
 		String path_in = args[0];
 		String path_out = args[1];
+		String path_last_capture = args[2];
+		String server_time = args[3];
 		
 		/*
 		String path_in = "./Tablet_Copec_1_2014-05-08T15:41:05-04:00android.cap";
@@ -32,7 +34,7 @@ public class Main {
 		*/
 
 		Analyzer a = new Analyzer();
-		a.run(path_in, path_out);
+		a.run(path_in, path_out, path_last_capture, server_time);
 
 	}
 
